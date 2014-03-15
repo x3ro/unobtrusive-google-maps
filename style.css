@@ -18,3 +18,9 @@ address {
     vertical-align: middle;
     padding: 10px;
 }
+
+@media only screen  and (min-device-width : 320px)  and (max-device-width : 480px) {
+    .rendered-google-maps {
+        width: 100%;
+    }
+}

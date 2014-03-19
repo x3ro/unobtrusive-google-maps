@@ -96,10 +96,21 @@
 
             var container = this.replaceWithMapContainer(node);
             var map = new google.maps.Map(container, mapOptions);
-            new google.maps.Marker({
+            var marker = new google.maps.Marker({
                 map: map,
                 position: result.geometry.location
             });
+
+            this.handleCustomMapOptions(node, map, mapOptions);
+        },
+
+        // Handles map options provided by his library and not by Google Maps.
+        handleCustomMapOptions: function(node, map, options) {
+            if(options['linkToMap']) {
+                google.maps.event.addListener(map, 'click', function() {
+                    window.open(map.mapUrl + '&q=' + encodeURIComponent(text(node)), '_blank');
+                });
+            }
         },
 
         // Replaces the given node with a div container which is to contain the rendered map.
@@ -162,6 +173,7 @@
                     case "scrollwheel":
                     case "street-view-control":
                     case "zoom-control":
+                    case "link-to-map": // This is a custom option, not a Maps API option
                         result[dashedToCapitalized(opt)] = /^[ ]*true[ ]*$/i.test(options[opt]);
                         break;
 

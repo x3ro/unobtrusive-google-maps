@@ -107,8 +107,10 @@
         // Handles map options provided by his library and not by Google Maps.
         handleCustomMapOptions: function(node, map, options) {
             if(options['linkToMap']) {
-                google.maps.event.addListener(map, 'click', function() {
+                google.maps.event.addDomListener(map.getDiv(), 'click', function(e) {
                     window.open(map.mapUrl + '&q=' + encodeURIComponent(text(node)), '_blank');
+                    e.preventDefault();
+                    e.stopPropagation();
                 });
             }
         },

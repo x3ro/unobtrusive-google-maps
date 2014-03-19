@@ -209,11 +209,13 @@
     // Returns a textual representation of the given node's contents,
     // i.e. stripped of all HTML
     function text(node) {
+        var text;
         if(typeof(node.textContent) === 'undefined') {
-            return node.innerText; // IE < 9
+            text = node.innerText; // IE < 9
         } else {
-            return node.textContent;
+            text = node.textContent;
         }
+        return text.replace(/(\n|\s\s+)/g, ' ')
     }
 
     // Convert a string of the 'dashed' form "this-is-awesome" to the capitalized

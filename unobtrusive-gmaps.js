@@ -82,14 +82,10 @@
         // Replaces the given node with a map displaying the result found by the
         // Geocoding API.
         renderMap: function(node, geocoderResults) {
-            var container = document.createElement("div");
-            container.className = 'rendered-google-maps';
-            node.parentNode.replaceChild(container, node);
+            var mapOptions = this.stringsToMapOptionsTypes(
+                this.dataAttributesFromNode(node));
 
             var result = geocoderResults[0];
-
-            var mapOptions = this.stringToMapOptionsType(
-                this.dataAttributesFromNode(node));
             mapOptions['center'] = result.geometry.location;
 
             // Default value for zoom because the Map will appear broken if no zoom is
@@ -98,11 +94,20 @@
                 mapOptions['zoom'] = 10;
             }
 
+            var container = this.replaceWithMapContainer(node);
             var map = new google.maps.Map(container, mapOptions);
             new google.maps.Marker({
                 map: map,
                 position: result.geometry.location
             });
+        },
+
+        // Replaces the given node with a div container which is to contain the rendered map.
+        replaceWithMapContainer: function(node) {
+            var container = document.createElement("div");
+            container.className = 'rendered-google-maps';
+            node.parentNode.replaceChild(container, node);
+            return container;
         },
 
         // Extracts all "data-*" attributes from the given node, and returns an object
@@ -123,7 +128,7 @@
 
         // Since HTML attributes can only contain strings, we need to map each option's
         // value to the correct type, or the API will complain.
-        stringToMapOptionsType: function(options) {
+        stringsToMapOptionsTypes: function(options) {
             var result = {};
 
             for(var opt in options) {

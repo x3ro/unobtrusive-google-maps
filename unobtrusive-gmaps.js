@@ -96,12 +96,9 @@
         // Renders a Google Map, replacing the given `node`. `latLong` must be
         // of type `google.maps.LatLng` and indicates the desired map center.
         renderMapWithCenter: function(node, latLong) {
-            var container = document.createElement("div");
-            container.className = 'rendered-google-maps';
-            node.parentNode.replaceChild(container, node);
-
-            var mapOptions = this.stringToMapOptionsType(
+            var mapOptions = this.stringsToMapOptionsTypes(
                 this.dataAttributesFromNode(node));
+
             mapOptions['center'] = latLong;
 
             // Default value for zoom because the Map will appear broken if no zoom is

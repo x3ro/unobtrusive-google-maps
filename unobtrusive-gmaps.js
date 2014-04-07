@@ -70,23 +70,39 @@
         mapify: function(node) {
             var _this = this;
 
-            this.geocoder.geocode({'address': text(node)}, function(results, status) {
+            var addressValue = text(node);
+            var result = _this.tryParseLatLong(addressValue);
+            if(result.valid) {
+                _this.renderMapWithCenter(node, result.latLong);
+                return;
+            }
+
+            this.geocoder.geocode({'address': addressValue}, function(results, status) {
                 if(status == google.maps.GeocoderStatus.OK) {
-                    _this.renderMap(node, results);
+                    _this.renderMapWithGeocoderResult(node, results);
                 } else {
-                    console.error('Geocode of "' + text(node) + '" was not successful for the following reason: ' + status);
+                    console.error('Geocode of "' + addressValue + '" was not successful for the following reason: ' + status);
                 }
             });
         },
 
         // Replaces the given node with a map displaying the result found by the
         // Geocoding API.
-        renderMap: function(node, geocoderResults) {
-            var mapOptions = this.stringsToMapOptionsTypes(
-                this.dataAttributesFromNode(node));
-
+        renderMapWithGeocoderResult: function(node, geocoderResults) {
             var result = geocoderResults[0];
-            mapOptions['center'] = result.geometry.location;
+            this.renderMapWithCenter(node, result.geometry.location);
+        },
+
+        // Renders a Google Map, replacing the given `node`. `latLong` must be
+        // of type `google.maps.LatLng` and indicates the desired map center.
+        renderMapWithCenter: function(node, latLong) {
+            var container = document.createElement("div");
+            container.className = 'rendered-google-maps';
+            node.parentNode.replaceChild(container, node);
+
+            var mapOptions = this.stringToMapOptionsType(
+                this.dataAttributesFromNode(node));
+            mapOptions['center'] = latLong;
 
             // Default value for zoom because the Map will appear broken if no zoom is
             // provided.
@@ -98,7 +114,7 @@
             var map = new google.maps.Map(container, mapOptions);
             var marker = new google.maps.Marker({
                 map: map,
-                position: result.geometry.location
+                position: latLong
             });
 
             this.handleCustomMapOptions(node, map, mapOptions);
@@ -121,6 +137,25 @@
             container.className = 'rendered-google-maps';
             node.parentNode.replaceChild(container, node);
             return container;
+        },
+
+        // Given arbitrary text, determines whether or not it represents a
+        // "Latitude Longitude" value pair.
+        // Returns an object with a key `valid` indicating whether or not a
+        // latLong value was found, and the corresponding location as an object
+        // of type `google.maps.LatLng`.
+        tryParseLatLong: function(text) {
+            var values = text.split(',');
+            if(values.length == 2) {
+                var lat = parseFloat(values[0]);
+                var lng = parseFloat(values[1]);
+
+                if(!isNaN(lat) && !isNaN(lng)) {
+                    return {valid: true, latLong: new google.maps.LatLng(lat, lng)};
+                }
+            }
+
+            return {valid: false, latLong: null};
         },
 
         // Extracts all "data-*" attributes from the given node, and returns an object

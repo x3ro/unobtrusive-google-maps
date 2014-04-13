@@ -28,6 +28,11 @@
     function UnobtrusiveGmaps(selector) {
         var _this = this;
 
+        // On iOS, the click event from `google.maps.event.addDomListener` mysteriously
+        // fires twice sometimes. To work around this issue, we only allow the click event
+        // to fire once every $ghostClickThreshold milliseconds.
+        _this.ghostClickThreshold = 3000; // ms
+
         // If there are no maps, bail out
         this.elements = document.querySelectorAll(selector);
         if(this.elements.length < 1) {
@@ -119,8 +124,16 @@
 
         // Handles map options provided by his library and not by Google Maps.
         handleCustomMapOptions: function(node, map, options) {
+            var _this = this;
             if(options['linkToMap']) {
+                var lastClickTime = 0;
                 google.maps.event.addDomListener(map.getDiv(), 'click', function(e) {
+                    var timeDiff = Date.now() - lastClickTime;
+                    if(timeDiff < _this.ghostClickThreshold) {
+                        return;
+                    }
+                    lastClickTime = Date.now();
+
                     window.open(map.mapUrl + '&q=' + encodeURIComponent(text(node)), '_blank');
                     e.preventDefault();
                     e.stopPropagation();
